@@ -2,18 +2,20 @@
  * src/features/videonav/VideoPathStudio.tsx
  *
  * Full-featured Video Walkthrough to 3D Navigation Path Studio.
- * Workflow:
+ * Upgraded with Gemma 3D Neural Scene Synthesis & Open-Source OpenStreetMap Integration:
  * 1. Upload .mov (or other video)
  * 2. Transcode / Convert to standard .mp4 with download option
  * 3. Computer Vision optical flow & motion trajectory analysis
- * 4. Dual synchronized 3D Model + Video Player
- * 5. One-click commit to offline Dexie routes & delta sync outbox
+ * 4. Gemma 3D Building Synthesis fusing OSM 3D footprints + video walkthrough
+ * 5. WebGL2 hardware-accelerated 3D architectural viewer (Aerial Orbit & 1st-Person POV)
+ * 6. One-click commit to offline Dexie routes & delta sync outbox
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { VideoConverter, ConversionProgress } from './videoConverter';
 import { VideoPathAnalyzer, VideoAnalysisResult, AnalysisProgress } from './videoAnalyzer';
-import { PathModelVisualizer } from './PathModelVisualizer';
+import { Gemma3DModeler, Campus3DScene } from '../../ai/gemma3DModeler';
+import { WebGL3DViewer } from './WebGL3DViewer';
 import { repo } from '../../db/repo';
 import {
   UploadCloud,
@@ -25,10 +27,10 @@ import {
   Footprints,
   Compass,
   Layers,
-  ArrowRight,
   ShieldCheck,
   RefreshCw,
   Sparkles,
+  Building,
   Check
 } from 'lucide-react';
 
@@ -39,13 +41,14 @@ interface VideoPathStudioProps {
 export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
-  const [mp4Blob, setMp4Blob] = useState<Blob | null>(null);
   const [mp4Url, setMp4Url] = useState<string | null>(null);
 
-  // Conversion & Analysis state
+  // Conversion, Analysis & 3D Synthesis state
   const [conversionProgress, setConversionProgress] = useState<ConversionProgress | null>(null);
   const [analysisProgress, setAnalysisProgress] = useState<AnalysisProgress | null>(null);
   const [analysisResult, setAnalysisResult] = useState<VideoAnalysisResult | null>(null);
+  const [gemmaScene, setGemmaScene] = useState<Campus3DScene | null>(null);
+  const [isSynthesizing3D, setIsSynthesizing3D] = useState(false);
 
   // Playback state
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -65,32 +68,29 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
     setSelectedFile(file);
     setIsSaved(false);
     setAnalysisResult(null);
+    setGemmaScene(null);
 
     const isMov = file.name.toLowerCase().endsWith('.mov') || file.type.includes('quicktime');
     const defaultName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-    setRouteName(defaultName || 'Scanned Campus Walkway');
+    setRouteName(defaultName || 'Library Walkway 3D Model');
 
     if (isMov) {
       // 1. Transcode .mov to .mp4
       try {
-        const { blob, url } = await VideoConverter.convertMovToMp4(file, progress => {
+        const { url } = await VideoConverter.convertMovToMp4(file, progress => {
           setConversionProgress(progress);
         });
 
-        setMp4Blob(blob);
         setMp4Url(url);
         setVideoSrc(url);
-
-        // 2. Analyze video motion & build 3D trajectory
         runVideoAnalysis(url);
       } catch (err) {
-        console.warn('Direct transcoding error, falling back to direct video decoding:', err);
+        console.warn('Transcoding fallback to direct video stream:', err);
         const directUrl = URL.createObjectURL(file);
         setVideoSrc(directUrl);
         runVideoAnalysis(directUrl);
       }
     } else {
-      // Already an MP4 or standard video
       const url = URL.createObjectURL(file);
       setVideoSrc(url);
       setMp4Url(url);
@@ -104,13 +104,19 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
         setAnalysisProgress(progress);
       });
       setAnalysisResult(result);
+
+      // 2. Synthesize 3D Building Scene via Gemma + OpenStreetMap Data
+      setIsSynthesizing3D(true);
+      const scene3D = await Gemma3DModeler.synthesize3DScene(result.trajectory, 'b-library');
+      setGemmaScene(scene3D);
+      setIsSynthesizing3D(false);
     } catch (err: any) {
       console.error('Video analysis failed:', err);
       alert('Video analysis failed: ' + err.message);
+      setIsSynthesizing3D(false);
     }
   };
 
-  // Video playback controls
   const togglePlay = () => {
     if (!videoRef.current) return;
     if (isPlaying) {
@@ -137,7 +143,6 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
     setCurrentTime(newTime);
   };
 
-  // Download converted MP4
   const handleDownloadMp4 = () => {
     if (!mp4Url) return;
     const a = document.createElement('a');
@@ -148,7 +153,6 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
     document.body.removeChild(a);
   };
 
-  // Save generated path to Quadrant local Dexie DB + Outbox
   const handleSaveRoute = async () => {
     if (!analysisResult) return;
 
@@ -184,8 +188,8 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
             <h3 className="text-base font-bold text-white mb-1">
               Select or Drop Campus Walkthrough Video (.mov / .mp4)
             </h3>
-            <p className="text-xs text-slate-400 max-w-sm mb-4">
-              Apple QuickTime (.mov) files are automatically transcoded to .mp4, analyzed frame-by-frame, and converted into an interactive 3D navigation path.
+            <p className="text-xs text-slate-400 max-w-md mb-4">
+              Gemma converts the video, reads open-source OpenStreetMap building footprints, and synthesizes 3D architectural models with synchronized walkthrough navigation.
             </p>
             <span className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white text-xs font-semibold shadow transition">
               Browse .mov / Video File
@@ -193,15 +197,15 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
           </label>
         </div>
       ) : (
-        <div className="flex items-center justify-between p-3 bg-slate-900 border border-slate-800 rounded-xl">
+        <div className="flex items-center justify-between p-3.5 bg-slate-900 border border-slate-800 rounded-xl">
           <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center border border-sky-500/20">
               <FileVideo className="w-5 h-5" />
             </div>
             <div>
               <span className="text-xs font-bold text-white block">{selectedFile?.name || 'Walkthrough Video'}</span>
-              <span className="text-[10px] text-slate-400">
-                {selectedFile && `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`} · Converted to H.264/MP4
+              <span className="text-[11px] text-slate-400">
+                {selectedFile && `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`} · Converted to .mp4
               </span>
             </div>
           </div>
@@ -234,13 +238,13 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
         </div>
       )}
 
-      {/* Progress Bars for Transcoding & Analysis */}
+      {/* Transcoding Progress */}
       {conversionProgress && conversionProgress.status === 'converting' && (
         <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
           <div className="flex justify-between text-xs">
             <span className="text-slate-300 font-semibold flex items-center space-x-2">
               <RefreshCw className="w-3.5 h-3.5 text-sky-400 animate-spin" />
-              <span>Transcoding .mov to .mp4 container...</span>
+              <span>Transcoding .mov to standard .mp4 container...</span>
             </span>
             <span className="text-sky-400 font-mono font-bold">{conversionProgress.progressPercent}%</span>
           </div>
@@ -253,6 +257,7 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
         </div>
       )}
 
+      {/* Frame Analysis Progress */}
       {analysisProgress && analysisProgress.status !== 'done' && (
         <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-2">
           <div className="flex justify-between text-xs">
@@ -271,13 +276,23 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
         </div>
       )}
 
-      {/* Main Dual Synchronized Workspace */}
-      {videoSrc && analysisResult && (
+      {/* Gemma 3D Building Synthesis Banner */}
+      {isSynthesizing3D && (
+        <div className="p-4 bg-sky-950/40 border border-sky-800/60 rounded-xl flex items-center space-x-3 text-xs text-sky-200">
+          <Sparkles className="w-5 h-5 text-sky-400 animate-spin" />
+          <div>
+            <span className="font-bold block">Gemma Neural 3D Building Reconstruction</span>
+            <span className="text-sky-300/80">Extruding OSM building footprints, floor plates, and aligning video coordinates...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Main Dual Synchronized Workspace: Video + High-Fidelity 3D WebGL Viewer */}
+      {videoSrc && analysisResult && gemmaScene && (
         <div className="space-y-6">
-          {/* Dual Split: Video Player + 3D Visual Navigation Model */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* 1. Video Player */}
-            <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col justify-between">
+            {/* 1. Synchronized Video Player */}
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col justify-between shadow-xl">
               <div className="relative bg-black aspect-video flex items-center justify-center">
                 <video
                   ref={videoRef}
@@ -291,7 +306,7 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
 
                 <button
                   onClick={togglePlay}
-                  className="absolute inset-0 m-auto w-12 h-12 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-transform active:scale-95"
+                  className="absolute inset-0 m-auto w-12 h-12 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center backdrop-blur-sm border border-white/20 transition-transform active:scale-95 shadow-2xl"
                 >
                   {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
                 </button>
@@ -299,17 +314,15 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
 
               {/* Scrubber Bar */}
               <div className="p-3 bg-slate-950 border-t border-slate-800 space-y-2">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="range"
-                    min={0}
-                    max={duration || 1}
-                    step={0.1}
-                    value={currentTime}
-                    onChange={e => handleSeek(parseFloat(e.target.value))}
-                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400"
-                  />
-                </div>
+                <input
+                  type="range"
+                  min={0}
+                  max={duration || 1}
+                  step={0.1}
+                  value={currentTime}
+                  onChange={e => handleSeek(parseFloat(e.target.value))}
+                  className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-sky-400"
+                />
 
                 <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono">
                   <span>{currentTime.toFixed(1)}s / {duration.toFixed(1)}s</span>
@@ -318,56 +331,54 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
               </div>
             </div>
 
-            {/* 2. Interactive 3D Visual Navigation Model */}
-            <div className="flex flex-col">
-              <PathModelVisualizer
-                trajectory={analysisResult.trajectory}
-                currentTimeSec={currentTime}
-                durationSec={duration}
-                onSeek={handleSeek}
-              />
-            </div>
+            {/* 2. High-Fidelity WebGL 3D Architectural Scene */}
+            <WebGL3DViewer
+              scene={gemmaScene}
+              currentTimeSec={currentTime}
+              durationSec={duration}
+              onSeek={handleSeek}
+            />
           </div>
 
-          {/* Path Intelligence Metrics Banner */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl">
-              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Total Distance</span>
-              <div className="flex items-baseline space-x-1 mt-1">
-                <span className="text-xl font-mono font-bold text-white">{analysisResult.totalDistanceMeters}</span>
-                <span className="text-xs text-slate-400">meters</span>
+          {/* Gemma Scene Synthesis Analysis Card */}
+          <div className="p-4 bg-slate-900 border border-slate-800 rounded-xl space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Building className="w-4 h-4 text-sky-400" />
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                  Gemma 3D Scene Synthesis (OpenStreetMap Fused)
+                </h3>
               </div>
-            </div>
-
-            <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl">
-              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Elevation Change</span>
-              <div className="flex items-baseline space-x-1 mt-1">
-                <span className="text-xl font-mono font-bold text-white">+{analysisResult.elevationGainMeters}</span>
-                <span className="text-xs text-slate-400">m ({analysisResult.inclinePct}% grade)</span>
-              </div>
-            </div>
-
-            <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl">
-              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Accessibility</span>
-              <div className="flex items-center space-x-1.5 mt-1.5">
-                {analysisResult.accessible ? (
-                  <>
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span className="text-xs font-bold text-emerald-400">ADA Accessible</span>
-                  </>
-                ) : (
-                  <span className="text-xs font-bold text-amber-400">Stairs / Steep Incline</span>
-                )}
-              </div>
-            </div>
-
-            <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl">
-              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Landmarks</span>
-              <span className="text-xs font-bold text-sky-400 mt-1 block">
-                {analysisResult.landmarksDetected.length > 0
-                  ? `${analysisResult.landmarksDetected.length} Detected`
-                  : 'Clear Corridor'}
+              <span className="text-[10px] text-slate-400">
+                {gemmaScene.summary.totalVertices.toLocaleString()} Vertices · {gemmaScene.summary.buildingsSynthesized} 3D Buildings
               </span>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed bg-slate-950/80 p-3 rounded-lg border border-slate-800/80">
+              {gemmaScene.summary.gemmaReasoning}
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+              <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">Distance</span>
+                <span className="text-base font-mono font-bold text-white">{analysisResult.totalDistanceMeters}m</span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">Grade / Incline</span>
+                <span className="text-base font-mono font-bold text-white">{analysisResult.inclinePct}%</span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">Accessibility</span>
+                <span className="text-xs font-bold text-emerald-400 mt-1 block">
+                  {analysisResult.accessible ? 'ADA Step-Free' : 'Requires Stairs'}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">Indoor Ratio</span>
+                <span className="text-base font-mono font-bold text-sky-400">
+                  {Math.round(gemmaScene.summary.indoorRatio * 100)}%
+                </span>
+              </div>
             </div>
           </div>
 
