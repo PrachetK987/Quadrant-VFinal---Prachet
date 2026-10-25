@@ -15,7 +15,7 @@ import {
   OPEN_SOURCE_CAMPUS_BUILDINGS,
   OPEN_SOURCE_CAMPUS_GROUNDS,
   BuildingFootprintOSM
-} from '../../data/openSourceCampusData';
+} from '../data/openSourceCampusData';
 import type { PathWaypoint3D } from '../features/videonav/videoAnalyzer';
 
 export interface Mesh3DGeometry {
