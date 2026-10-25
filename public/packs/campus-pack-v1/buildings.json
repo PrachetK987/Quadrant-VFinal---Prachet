@@ -1,0 +1,266 @@
+{
+  "campus": {
+    "id": "c-berkeley-central",
+    "name": "Central Campus",
+    "center_lat": 37.8719,
+    "center_lng": -122.2585,
+    "current_pack_version": "v1.2.0"
+  },
+  "buildings": [
+    {
+      "id": "b-library",
+      "campus_id": "c-berkeley-central",
+      "name": "Main Memorial Library",
+      "lat": 37.8724,
+      "lng": -122.2595,
+      "hours": "7:30 AM - Midnight",
+      "floors_count": 4,
+      "tags": ["Study", "Silent", "Computers", "Printers", "Late Night"],
+      "amenities": ["outlets", "wifi", "quiet", "printer", "restrooms", "accessible_entrance"],
+      "accessibility_notes": "Ramped western entrance, automatic doors, dual elevators to all levels.",
+      "navigability": 5,
+      "updated_at": "2026-10-25T12:00:00Z",
+      "floors": [
+        {
+          "id": "f-lib-1",
+          "building_id": "b-library",
+          "level": 1,
+          "floorplan_svg_path": "/packs/campus-pack-v1/floorplans/library-fl1.svg",
+          "highlights": ["Circulation Desk", "Collaborative Commons", "Tech Hub", "Auditorium"]
+        },
+        {
+          "id": "f-lib-2",
+          "building_id": "b-library",
+          "level": 2,
+          "floorplan_svg_path": "/packs/campus-pack-v1/floorplans/library-fl2.svg",
+          "highlights": ["Room 214 (Quiet Study)", "Individual Carrels", "Graduate Reading Room"]
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r-lib-101",
+          "floor_id": "f-lib-1",
+          "room_number": "101",
+          "name": "Circulation Desk",
+          "type": "service",
+          "svg_element_id": "room-101"
+        },
+        {
+          "id": "r-lib-102",
+          "floor_id": "f-lib-1",
+          "room_number": "102",
+          "name": "Study Commons",
+          "type": "study",
+          "svg_element_id": "room-102"
+        },
+        {
+          "id": "r-lib-105",
+          "floor_id": "f-lib-1",
+          "room_number": "105",
+          "name": "Print & Tech Hub",
+          "type": "tech",
+          "svg_element_id": "room-105"
+        },
+        {
+          "id": "r-lib-120",
+          "floor_id": "f-lib-1",
+          "room_number": "120",
+          "name": "Auditorium Hall",
+          "type": "lecture",
+          "svg_element_id": "room-120"
+        },
+        {
+          "id": "r-lib-210",
+          "floor_id": "f-lib-2",
+          "room_number": "210",
+          "name": "Focus Carrels",
+          "type": "study",
+          "svg_element_id": "room-210"
+        },
+        {
+          "id": "r-lib-214",
+          "floor_id": "f-lib-2",
+          "room_number": "214",
+          "name": "High-Power Quiet Hall",
+          "type": "study",
+          "svg_element_id": "room-214"
+        },
+        {
+          "id": "r-lib-220",
+          "floor_id": "f-lib-2",
+          "room_number": "220",
+          "name": "Graduate Reading Room",
+          "type": "study",
+          "svg_element_id": "room-220"
+        }
+      ]
+    },
+    {
+      "id": "b-science",
+      "campus_id": "c-berkeley-central",
+      "name": "Science & Innovation Hall",
+      "lat": 37.8732,
+      "lng": -122.2572,
+      "hours": "8:00 AM - 10:00 PM",
+      "floors_count": 3,
+      "tags": ["STEM", "Labs", "Robotics", "3D Printing", "Tutoring"],
+      "amenities": ["outlets", "wifi", "microwave", "restrooms", "accessible_entrance"],
+      "accessibility_notes": "Ground-level zero step entry from courtyard, elevator adjacent to Room S110.",
+      "navigability": 4,
+      "updated_at": "2026-10-25T12:00:00Z",
+      "floors": [
+        {
+          "id": "f-sci-1",
+          "building_id": "b-science",
+          "level": 1,
+          "floorplan_svg_path": "/packs/campus-pack-v1/floorplans/science-fl1.svg",
+          "highlights": ["Robotics Lab", "Physics Hall", "Linux Lab", "Advising"]
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r-sci-101",
+          "floor_id": "f-sci-1",
+          "room_number": "S101",
+          "name": "Robotics Lab",
+          "type": "lab",
+          "svg_element_id": "room-s101"
+        },
+        {
+          "id": "r-sci-105",
+          "floor_id": "f-sci-1",
+          "room_number": "S105",
+          "name": "Physics Hall A",
+          "type": "lecture",
+          "svg_element_id": "room-s105"
+        },
+        {
+          "id": "r-sci-110",
+          "floor_id": "f-sci-1",
+          "room_number": "S110",
+          "name": "Linux Lab",
+          "type": "lab",
+          "svg_element_id": "room-s110"
+        },
+        {
+          "id": "r-sci-115",
+          "floor_id": "f-sci-1",
+          "room_number": "S115",
+          "name": "Advising Center",
+          "type": "service",
+          "svg_element_id": "room-s115"
+        }
+      ]
+    },
+    {
+      "id": "b-union",
+      "campus_id": "c-berkeley-central",
+      "name": "Student Union & Commons",
+      "lat": 37.8698,
+      "lng": -122.2590,
+      "hours": "7:00 AM - 11:00 PM",
+      "floors_count": 2,
+      "tags": ["Food", "Social", "Lounge", "Lockers", "ATM", "Coffee"],
+      "amenities": ["food", "microwave", "outlets", "wifi", "restrooms", "accessible_entrance"],
+      "accessibility_notes": "Full ramp access from plaza, power push buttons on both entrances.",
+      "navigability": 5,
+      "updated_at": "2026-10-25T12:00:00Z",
+      "floors": [
+        {
+          "id": "f-union-1",
+          "building_id": "b-union",
+          "level": 1,
+          "floorplan_svg_path": "/packs/campus-pack-v1/floorplans/student-union-fl1.svg",
+          "highlights": ["Food Court", "Lounge", "Commuter Lockers", "Campus Store"]
+        }
+      ],
+      "rooms": [
+        {
+          "id": "r-u-101",
+          "floor_id": "f-union-1",
+          "room_number": "U101",
+          "name": "Food Court",
+          "type": "dining",
+          "svg_element_id": "room-u101"
+        },
+        {
+          "id": "r-u-102",
+          "floor_id": "f-union-1",
+          "room_number": "U102",
+          "name": "Student Lounge",
+          "type": "lounge",
+          "svg_element_id": "room-u102"
+        },
+        {
+          "id": "r-u-103",
+          "floor_id": "f-union-1",
+          "room_number": "U103",
+          "name": "Commuter Lockers",
+          "type": "service",
+          "svg_element_id": "room-u103"
+        },
+        {
+          "id": "r-u-104",
+          "floor_id": "f-union-1",
+          "room_number": "U104",
+          "name": "Campus Store",
+          "type": "retail",
+          "svg_element_id": "room-u104"
+        }
+      ]
+    }
+  ],
+  "initial_reviews": [
+    {
+      "id": "rev-1",
+      "building_id": "b-library",
+      "user_id": "user-demo-1",
+      "user_name": "Maya Lin (Class of '27)",
+      "stars": 5,
+      "navigability": 5,
+      "text": "Floor 2 Room 214 is the ultimate finals week secret. Silent as a tomb, tons of desk outlets, and climate control is dialed in.",
+      "tags": ["Quiet", "Outlets", "AC"],
+      "updated_at": "2026-10-25T10:30:00Z"
+    },
+    {
+      "id": "rev-2",
+      "building_id": "b-science",
+      "user_id": "user-demo-2",
+      "user_name": "Alex Rivera (Grad)",
+      "stars": 4,
+      "navigability": 4,
+      "text": "Linux Lab S110 has blazing fast gigabit ethernet and dual screen workstations. Can get warm around 3 PM.",
+      "tags": ["Monitors", "Fast Wi-Fi"],
+      "updated_at": "2026-10-25T11:15:00Z"
+    },
+    {
+      "id": "rev-3",
+      "building_id": "b-union",
+      "user_id": "user-demo-3",
+      "user_name": "Sam Patel (Senior)",
+      "stars": 4,
+      "navigability": 5,
+      "text": "Three commercial microwaves right next to Room U101. Line moves quickly even during peak lunch rush at 12:30.",
+      "tags": ["Microwaves", "Food"],
+      "updated_at": "2026-10-25T11:45:00Z"
+    }
+  ],
+  "initial_tips": [
+    {
+      "id": "tip-1",
+      "building_id": "b-library",
+      "user_id": "user-demo-1",
+      "user_name": "Maya Lin",
+      "text": "The corner booths in 102 have hidden power strips underneath the table lip.",
+      "updated_at": "2026-10-25T10:35:00Z"
+    },
+    {
+      "id": "tip-2",
+      "building_id": "b-union",
+      "user_id": "user-demo-3",
+      "user_name": "Sam Patel",
+      "text": "Free hot water tap is located behind the coffee bar in the food court.",
+      "updated_at": "2026-10-25T11:50:00Z"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "quadrant",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Offline-first campus navigation, crowd reporting, floorplans, and on-device AI assistant",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "build-pack": "tsx tools/build-pack.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "clsx": "^2.1.1",
+    "dexie": "^4.0.8",
+    "dexie-react-hooks": "^1.1.7",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^0.453.0",
+    "protomaps-leaflet": "^2.0.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tailwind-merge": "^2.5.4"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.12",
+    "@types/node": "^22.7.5",
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.2",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.47",
+    "tailwindcss": "^3.4.13",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.8",
+    "vite-plugin-pwa": "^0.20.5",
+    "workbox-window": "^7.1.0"
+  }
+}

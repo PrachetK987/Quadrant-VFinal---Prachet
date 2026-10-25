@@ -1,0 +1,38 @@
+{
+  "version": "v1.2.0",
+  "campus_id": "c-berkeley-central",
+  "generated_at": "2026-10-25T12:00:00Z",
+  "total_size_bytes": 284500,
+  "files": [
+    {
+      "path": "buildings.json",
+      "size": 4200,
+      "checksum": "sha256-b9a19c9e88"
+    },
+    {
+      "path": "routes.geojson",
+      "size": 1800,
+      "checksum": "sha256-a114f09d81"
+    },
+    {
+      "path": "floorplans/library-fl1.svg",
+      "size": 3200,
+      "checksum": "sha256-f80e920d3a"
+    },
+    {
+      "path": "floorplans/library-fl2.svg",
+      "size": 3100,
+      "checksum": "sha256-7848bc29df"
+    },
+    {
+      "path": "floorplans/science-fl1.svg",
+      "size": 2900,
+      "checksum": "sha256-d41d8cd98f"
+    },
+    {
+      "path": "floorplans/student-union-fl1.svg",
+      "size": 3000,
+      "checksum": "sha256-02e7b8a741"
+    }
+  ]
+}

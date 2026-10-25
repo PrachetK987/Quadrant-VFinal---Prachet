@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%" class="floorplan-svg">
+  <defs>
+    <style>
+      .room { fill: #1e293b; stroke: #475569; stroke-width: 2; transition: all 0.2s ease; cursor: pointer; }
+      .room:hover { fill: #334155; stroke: #38bdf8; }
+      .room.active { fill: #0369a1 !important; stroke: #38bdf8 !important; stroke-width: 3; }
+      .corridor { fill: #0f172a; stroke: #334155; stroke-dasharray: 4; }
+      .room-label { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: #f8fafc; pointer-events: none; text-anchor: middle; }
+      .room-sub { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 10px; fill: #94a3b8; pointer-events: none; text-anchor: middle; }
+      .wall { stroke: #64748b; stroke-width: 4; fill: none; }
+    </style>
+  </defs>
+
+  <rect x="40" y="40" width="720" height="520" rx="8" class="wall" />
+  
+  <rect x="350" y="40" width="100" height="520" class="corridor" />
+  <text x="400" y="300" class="room-sub" transform="rotate(-90 400 300)">LEVEL 2 CORRIDOR (SILENT ZONE)</text>
+
+  <!-- Room 210: Individual Carrels -->
+  <g id="room-210" class="room-group">
+    <rect x="60" y="60" width="270" height="220" rx="4" class="room" />
+    <text x="195" y="160" class="room-label">Room 210 - Deep Focus Carrels</text>
+    <text x="195" y="180" class="room-sub">Single desks, noise-cancelling partitions</text>
+  </g>
+
+  <!-- Room 214: Quiet Study with Outlets (Featured in Architecture Guide) -->
+  <g id="room-214" class="room-group">
+    <rect x="60" y="300" width="270" height="240" rx="4" class="room" />
+    <text x="195" y="410" class="room-label">Room 214 - High-Power Quiet Hall</text>
+    <text x="195" y="430" class="room-sub">Dedicated Outlets at every chair, Silent</text>
+  </g>
+
+  <!-- Room 220: Graduate Reading Room -->
+  <g id="room-220" class="room-group">
+    <rect x="470" y="60" width="270" height="200" rx="4" class="room" />
+    <text x="605" y="150" class="room-label">Room 220 - Graduate Reading Room</text>
+    <text x="605" y="170" class="room-sub">Keycard access, dual monitor stations</text>
+  </g>
+
+  <!-- Restroom & Elevators -->
+  <g id="restroom-2f" class="room-group">
+    <rect x="470" y="280" width="130" height="100" rx="4" class="room" />
+    <text x="535" y="330" class="room-label">Restrooms</text>
+    <text x="535" y="350" class="room-sub">Floor 2</text>
+  </g>
+  <g id="elevator-2f" class="room-group">
+    <rect x="610" y="280" width="130" height="100" rx="4" class="room" />
+    <text x="675" y="330" class="room-label">Elevators</text>
+    <text x="675" y="350" class="room-sub">Central Core</text>
+  </g>
+
+  <!-- Room 225: Seminar & Thesis Defense Room -->
+  <g id="room-225" class="room-group">
+    <rect x="470" y="400" width="270" height="140" rx="4" class="room" />
+    <text x="605" y="465" class="room-label">Room 225 - Seminar Room</text>
+    <text x="605" y="485" class="room-sub">Conference table, 4K display</text>
+  </g>
+</svg>

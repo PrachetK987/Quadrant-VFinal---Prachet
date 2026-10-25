@@ -1,0 +1,17 @@
+{
+  "name": "Quadrant",
+  "short_name": "Quadrant",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "description": "Offline-first campus guide with floor plans, crowd reporting, and local AI",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

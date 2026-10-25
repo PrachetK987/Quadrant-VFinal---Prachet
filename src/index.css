@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #020617;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+}
+
+/* Floorplan Interactive Styling */
+.floorplan-svg {
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.4));
+  user-select: none;
+}
+
+.room-group {
+  cursor: pointer;
+}
+
+.room-group:hover .room {
+  fill: #334155 !important;
+  stroke: #38bdf8 !important;
+}
+
+.room-group .room.active {
+  fill: #0369a1 !important;
+  stroke: #38bdf8 !important;
+  stroke-width: 3.5px !important;
+  filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.6));
+}
+
+/* Hide scrollbar for clean chip sliders */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.98); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

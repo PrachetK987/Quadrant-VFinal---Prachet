@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%" class="floorplan-svg">
+  <defs>
+    <style>
+      .room { fill: #1e293b; stroke: #475569; stroke-width: 2; transition: all 0.2s ease; cursor: pointer; }
+      .room:hover { fill: #334155; stroke: #38bdf8; }
+      .room.active { fill: #0369a1 !important; stroke: #38bdf8 !important; stroke-width: 3; }
+      .corridor { fill: #0f172a; stroke: #334155; stroke-dasharray: 4; }
+      .room-label { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13px; font-weight: 600; fill: #f8fafc; pointer-events: none; text-anchor: middle; }
+      .room-sub { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 10px; fill: #94a3b8; pointer-events: none; text-anchor: middle; }
+      .amenity-icon { fill: #38bdf8; pointer-events: none; }
+      .wall { stroke: #64748b; stroke-width: 4; fill: none; }
+    </style>
+  </defs>
+
+  <!-- Outer Building Walls -->
+  <rect x="40" y="40" width="720" height="520" rx="8" class="wall" />
+  
+  <!-- Central Corridor -->
+  <rect x="350" y="40" width="100" height="520" class="corridor" />
+  <text x="400" y="300" class="room-sub" transform="rotate(-90 400 300)">CENTRAL CONCOURSE</text>
+
+  <!-- West Wing Rooms -->
+  <!-- Room 101: Circulation & Information Desk -->
+  <g id="room-101" class="room-group">
+    <rect x="60" y="60" width="270" height="130" rx="4" class="room" />
+    <text x="195" y="120" class="room-label">Room 101 - Help & Circulation</text>
+    <text x="195" y="140" class="room-sub">Checkout, Reserve Desk, Staff</text>
+  </g>
+
+  <!-- Room 102: Collaborative Study Commons -->
+  <g id="room-102" class="room-group">
+    <rect x="60" y="210" width="270" height="180" rx="4" class="room" />
+    <text x="195" y="290" class="room-label">Room 102 - Study Commons</text>
+    <text x="195" y="310" class="room-sub">Outlets, Whiteboards, Group Desks</text>
+  </g>
+
+  <!-- Room 105: Print & Tech Station -->
+  <g id="room-105" class="room-group">
+    <rect x="60" y="410" width="270" height="130" rx="4" class="room" />
+    <text x="195" y="470" class="room-label">Room 105 - Tech Hub & Print</text>
+    <text x="195" y="490" class="room-sub">Laser Printers, Scanners, Tech Loan</text>
+  </g>
+
+  <!-- East Wing Rooms -->
+  <!-- Room 110: Cafe & Lounge -->
+  <g id="room-110" class="room-group">
+    <rect x="470" y="60" width="270" height="140" rx="4" class="room" />
+    <text x="605" y="125" class="room-label">Room 110 - Campus Books & Cafe</text>
+    <text x="605" y="145" class="room-sub">Coffee, Quick bites, Soft seating</text>
+  </g>
+
+  <!-- Restrooms -->
+  <g id="restroom-1f" class="room-group">
+    <rect x="470" y="220" width="130" height="100" rx="4" class="room" />
+    <text x="535" y="270" class="room-label">Restrooms</text>
+    <text x="535" y="290" class="room-sub">ADA Accessible</text>
+  </g>
+
+  <!-- Elevators & Stairs -->
+  <g id="elevator-1f" class="room-group">
+    <rect x="610" y="220" width="130" height="100" rx="4" class="room" />
+    <text x="675" y="270" class="room-label">Elevators / Stairs</text>
+    <text x="675" y="290" class="room-sub">To Floors 2 - 4</text>
+  </g>
+
+  <!-- Room 120: Auditorium / Event Space -->
+  <g id="room-120" class="room-group">
+    <rect x="470" y="340" width="270" height="200" rx="4" class="room" />
+    <text x="605" y="435" class="room-label">Room 120 - Main Auditorium</text>
+    <text x="605" y="455" class="room-sub">Capacity: 180 seats, Dual AV</text>
+  </g>
+</svg>
