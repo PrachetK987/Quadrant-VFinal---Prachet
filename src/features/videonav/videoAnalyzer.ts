@@ -4,16 +4,16 @@
  * Computer Vision & Motion Estimation Engine:
  * - Samples video frames across the timeline
  * - Computes optical flow and luminance gradients between adjacent frames
- * - Reconstructs visual odometry (heading yaw, velocity, elevation incline)
- * - Detects spatial landmarks (corridor turns, doorways, stairs/ramps)
- * - Produces a high-density 3D trajectory and campus GeoJSON coordinates
+ * - Captures realistic camera turns (yaw) and non-linear paths (L-turns, T-junctions, S-curves)
+ * - Detects vertical elevation changes (stairs, ramps, multi-level transitions)
+ * - Identifies structural doorways and transitions
  */
 
 export interface PathWaypoint3D {
   index: number;
   timeSec: number;
-  x: number; // relative meters (East)
-  y: number; // relative meters (North)
+  x: number; // relative meters (East / Right)
+  y: number; // relative meters (North / Forward)
   z: number; // relative meters (Elevation)
   headingDeg: number; // 0-360 degrees
   speedMps: number;
@@ -29,6 +29,7 @@ export interface VideoAnalysisResult {
   inclinePct: number;
   trajectory: PathWaypoint3D[];
   landmarksDetected: string[];
+  detectedFloorLevel: number; // estimated level (1, 2, 3, 4)
   geoJson: {
     type: 'Feature';
     properties: {
@@ -39,7 +40,7 @@ export interface VideoAnalysisResult {
     };
     geometry: {
       type: 'LineString';
-      coordinates: [number, number, number][]; // [lng, lat, alt]
+      coordinates: [number, number, number][];
     };
   };
 }
@@ -55,13 +56,10 @@ export interface AnalysisProgress {
 export type AnalysisProgressListener = (progress: AnalysisProgress) => void;
 
 export class VideoPathAnalyzer {
-  /**
-   * Analyzes video content to extract a 3D spatial trajectory and navigation path.
-   */
   public static async analyzeVideoPath(
     videoSource: File | Blob | string,
-    anchorLat: number = 37.8724,
-    anchorLng: number = -122.2595,
+    anchorLat: number = 32.8784,
+    anchorLng: number = -127.2359,
     onProgress?: AnalysisProgressListener
   ): Promise<VideoAnalysisResult> {
     return new Promise((resolve, reject) => {
@@ -75,9 +73,9 @@ export class VideoPathAnalyzer {
 
       video.onloadedmetadata = async () => {
         const duration = video.duration || 15;
-        // Sample 2-3 keyframes per second for high-precision trajectory reconstruction
-        const sampleFps = 2.5;
-        const totalFrames = Math.max(10, Math.floor(duration * sampleFps));
+        // Sample at 3 fps for responsive tracking of turns and bends
+        const sampleFps = 3.0;
+        const totalFrames = Math.max(12, Math.floor(duration * sampleFps));
         const sampleInterval = duration / totalFrames;
 
         const canvas = document.createElement('canvas');
@@ -96,24 +94,20 @@ export class VideoPathAnalyzer {
         let currentX = 0;
         let currentY = 0;
         let currentZ = 0;
-        let currentHeading = 45; // Initial heading degrees (NE)
+        let currentHeading = 0; // 0 degrees = forward (North)
         let prevFrameData: ImageData | null = null;
         let totalDistance = 0;
 
         const processFrame = async (frameIdx: number) => {
           if (frameIdx >= totalFrames) {
-            // Synthesis phase
             onProgress?.({
               status: 'synthesizing',
               currentFrame: totalFrames,
               totalFrames,
-              percent: 95,
-              stageMessage: 'Synthesizing 3D navigation model and GeoJSON...'
+              percent: 96,
+              stageMessage: 'Reconstructing non-linear indoor trajectory...'
             });
 
-            // Convert local relative meters to geographical coordinates
-            // 1 degree latitude ~= 111,000 meters
-            // 1 degree longitude ~= 111,000 * cos(lat)
             const metersToLat = 1 / 111000;
             const metersToLng = 1 / (111000 * Math.cos((anchorLat * Math.PI) / 180));
 
@@ -125,7 +119,13 @@ export class VideoPathAnalyzer {
 
             const elevationGain = Math.max(0, currentZ);
             const incline = totalDistance > 0 ? (elevationGain / totalDistance) * 100 : 0;
-            const accessible = incline < 5.0; // ADA standard max ramp slope 1:12 (~8%)
+            const accessible = incline < 6.0;
+
+            // Estimate floor level based on vertical elevation shifts
+            let detectedFloorLevel = 2; // Default to Level 2 in DIB
+            if (currentZ > 3.5) detectedFloorLevel = 3;
+            if (currentZ > 7.0) detectedFloorLevel = 4;
+            if (currentZ < -2.0) detectedFloorLevel = 1;
 
             const result: VideoAnalysisResult = {
               durationSec: duration,
@@ -135,10 +135,11 @@ export class VideoPathAnalyzer {
               inclinePct: Math.round(incline * 10) / 10,
               trajectory,
               landmarksDetected,
+              detectedFloorLevel,
               geoJson: {
                 type: 'Feature',
                 properties: {
-                  name: `Video Walkthrough Path (${Math.round(totalDistance)}m)`,
+                  name: `UCSD DIB Indoor Walkway (${Math.round(totalDistance)}m)`,
                   distance_meters: Math.round(totalDistance),
                   accessible,
                   created_from: 'Video Walkthrough 3D Model'
@@ -159,7 +160,7 @@ export class VideoPathAnalyzer {
               currentFrame: totalFrames,
               totalFrames,
               percent: 100,
-              stageMessage: 'Navigation model complete!'
+              stageMessage: 'Indoor navigation model complete!'
             });
 
             resolve(result);
@@ -177,61 +178,56 @@ export class VideoPathAnalyzer {
             video.addEventListener('seeked', onSeeked);
           });
 
-          // Draw and read frame pixels
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
           const currentFrameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-          let speedMps = 1.2; // average human walking speed ~ 1.2 m/s
-          let yawDelta = 0;
+          let speedMps = 1.15; // natural indoor walking pace
           let landmark: string | undefined;
           let isTurn = false;
 
           if (prevFrameData) {
-            // Optical motion estimation across 3 image zones (Left, Center, Right)
+            // Optical motion estimation across 3 distinct vertical zones (Left 33%, Center 34%, Right 33%)
             const motionLeft = computeZoneMotion(prevFrameData, currentFrameData, 0, 0.33);
             const motionCenter = computeZoneMotion(prevFrameData, currentFrameData, 0.33, 0.66);
             const motionRight = computeZoneMotion(prevFrameData, currentFrameData, 0.66, 1.0);
 
-            // Yaw rotation: difference between left and right optic flow
-            const horizontalFlow = motionRight - motionLeft;
-            yawDelta = horizontalFlow * 12; // degrees per interval
+            // Responsive yaw rotation detection
+            // When turning right, imagery moves to the left (motionLeft increases)
+            const turnFlow = motionLeft - motionRight;
+            const yawDeltaDegrees = turnFlow * 58; // calibrated degrees per interval
 
-            // Detect sharp turn
-            if (Math.abs(yawDelta) > 15) {
-              isTurn = true;
-              currentHeading = (currentHeading + yawDelta + 360) % 360;
-              if (yawDelta > 0) {
-                landmark = 'Turn Right Corridor';
-              } else {
-                landmark = 'Turn Left Corridor';
+            // If turn delta is noticeable, rotate heading
+            if (Math.abs(yawDeltaDegrees) > 2.5) {
+              isTurn = Math.abs(yawDeltaDegrees) > 7.0;
+              currentHeading = (currentHeading + yawDeltaDegrees + 360) % 360;
+
+              if (Math.abs(yawDeltaDegrees) > 12) {
+                landmark = yawDeltaDegrees > 0 ? 'Corner Turn Right' : 'Corner Turn Left';
               }
-            } else {
-              currentHeading = (currentHeading + yawDelta * 0.3 + 360) % 360;
             }
 
-            // Detect doorway / high-contrast structural edges
+            // Doorway / high-contrast structural frame detection
             const edgeDensity = computeEdgeDensity(currentFrameData);
-            if (edgeDensity > 0.42 && !landmark) {
-              landmark = 'Doorway / Transition Zone';
-              if (!landmarksDetected.includes('Doorway')) {
-                landmarksDetected.push('Doorway');
+            if (edgeDensity > 0.44 && !landmark) {
+              landmark = 'Studio Doorway';
+              if (!landmarksDetected.includes('Studio Doorway')) {
+                landmarksDetected.push('Studio Doorway');
               }
             }
 
-            // Step distance during interval
+            // Step displacement along current heading vector (allowing full 2D curves and turning)
             const dt = sampleInterval;
             const stepDist = speedMps * dt;
             totalDistance += stepDist;
 
-            // Compute (x, y) displacement
             const headingRad = (currentHeading * Math.PI) / 180;
             currentX += Math.sin(headingRad) * stepDist;
             currentY += Math.cos(headingRad) * stepDist;
 
-            // Vertical movement (slight ramp or elevation changes)
+            // Vertical movement
             const verticalMotion = computeVerticalMotion(prevFrameData, currentFrameData);
-            if (Math.abs(verticalMotion) > 0.05) {
-              currentZ += verticalMotion * 0.2;
+            if (Math.abs(verticalMotion) > 0.06) {
+              currentZ += verticalMotion * 0.25;
             }
           }
 
@@ -253,20 +249,18 @@ export class VideoPathAnalyzer {
 
           prevFrameData = currentFrameData;
 
-          const percent = Math.min(94, Math.round(((frameIdx + 1) / totalFrames) * 94));
+          const percent = Math.min(95, Math.round(((frameIdx + 1) / totalFrames) * 95));
           onProgress?.({
             status: 'processing',
             currentFrame: frameIdx + 1,
             totalFrames,
             percent,
-            stageMessage: `Analyzing visual motion (Frame ${frameIdx + 1}/${totalFrames})...`
+            stageMessage: `Analyzing indoor motion & turns (${frameIdx + 1}/${totalFrames})...`
           });
 
-          // Yield execution to preserve UI responsiveness
-          setTimeout(() => processFrame(frameIdx + 1), 10);
+          setTimeout(() => processFrame(frameIdx + 1), 8);
         };
 
-        // Start processing
         onProgress?.({
           status: 'sampling',
           currentFrame: 0,
@@ -285,9 +279,6 @@ export class VideoPathAnalyzer {
   }
 }
 
-/**
- * Helper: Computes motion variance within a horizontal zone of the frame
- */
 function computeZoneMotion(prev: ImageData, curr: ImageData, startXRatio: number, endXRatio: number): number {
   const width = prev.width;
   const height = prev.height;
@@ -310,9 +301,6 @@ function computeZoneMotion(prev: ImageData, curr: ImageData, startXRatio: number
   return count > 0 ? diffSum / count / 255 : 0;
 }
 
-/**
- * Helper: Computes vertical flow indicating stair or ramp elevation
- */
 function computeVerticalMotion(prev: ImageData, curr: ImageData): number {
   const width = prev.width;
   const height = prev.height;
@@ -332,9 +320,6 @@ function computeVerticalMotion(prev: ImageData, curr: ImageData): number {
   return count > 0 ? (bottomDiff - topDiff) / count / 255 : 0;
 }
 
-/**
- * Helper: Estimates high frequency edge density to flag doors and corridor features
- */
 function computeEdgeDensity(frame: ImageData): number {
   const { width, height, data } = frame;
   let edgeCount = 0;

@@ -1,11 +1,12 @@
 /**
  * src/features/videonav/WebGL3DViewer.tsx
  *
- * High-Fidelity 3D Indoor Architectural WebGL Renderer for UCSD Buildings:
- * - Direct WebGL2 accelerated interior rendering of hallways, walls, doors, and ceilings
- * - First-Person Walkthrough POV (camera walks down hallway matching video playback)
- * - Dollhouse Cutaway Mode (isometric bird's-eye view with ceiling removed)
- * - Room placard detection and active door highlights
+ * High-Fidelity 3D Indoor Architectural WebGL Renderer for UCSD DIB:
+ * - Direct WebGL2 accelerated interior rendering of turning corridors, walls, doors, and ceilings
+ * - First-Person Walkthrough POV smoothly turning around corners and bends
+ * - Architectural Dollhouse Cutaway Mode (isometric bird's-eye view with ceiling removed)
+ * - Multi-Level Building Floor Selection (Level 1, 2, 3, 4)
+ * - Detailed glass studio windows, structural concrete columns, and room placards
  */
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -20,7 +21,8 @@ import {
   Sparkles,
   Maximize2,
   DoorOpen,
-  MapPin
+  MapPin,
+  Building
 } from 'lucide-react';
 
 interface WebGL3DViewerProps {
@@ -28,6 +30,7 @@ interface WebGL3DViewerProps {
   currentTimeSec: number;
   durationSec: number;
   onSeek?: (timeSec: number) => void;
+  onSelectLevel?: (level: number) => void;
   className?: string;
 }
 
@@ -36,31 +39,43 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
   currentTimeSec,
   durationSec,
   onSeek,
+  onSelectLevel,
   className = ''
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  // Default to First-Person POV for authentic indoor walkthrough!
   const [cameraMode, setCameraMode] = useState<'first_person' | 'dollhouse'>('first_person');
   const [showCeiling, setShowCeiling] = useState(false);
 
   // Dollhouse orbit camera state
-  const [yaw, setYaw] = useState(0); // degrees
-  const [pitch, setPitch] = useState(48); // degrees
-  const [distance, setDistance] = useState(24); // meters
-  const [panY, setPanY] = useState(15);
+  const [yaw, setYaw] = useState(30);
+  const [pitch, setPitch] = useState(48);
+  const [distance, setDistance] = useState(26);
 
   const isDraggingRef = useRef(false);
   const lastMousePosRef = useRef({ x: 0, y: 0 });
 
   // Find active waypoint for current video time
-  const currentWaypoint: PathWaypoint3D = scene.fusedTrajectory.reduce((prev, curr) => {
-    return Math.abs(curr.timeSec - currentTimeSec) < Math.abs(prev.timeSec - currentTimeSec)
-      ? curr
-      : prev;
-  }, scene.fusedTrajectory[0] || { x: 0, y: 0, z: 1.65, headingDeg: 0, timeSec: 0 });
+  const currentWaypointIndex = scene.fusedTrajectory.findIndex(
+    wp => wp.timeSec >= currentTimeSec
+  );
+  const activeIdx = Math.max(0, currentWaypointIndex === -1 ? scene.fusedTrajectory.length - 1 : currentWaypointIndex);
+  const currentWaypoint: PathWaypoint3D = scene.fusedTrajectory[activeIdx] || {
+    x: 0,
+    y: 0,
+    z: scene.floorElevationZ + 1.65,
+    headingDeg: 0,
+    timeSec: 0
+  };
 
-  // Detect closest room based on current Y distance along corridor
-  const nearbyRoom = scene.rooms.find(r => Math.abs(r.doorPosition[1] - (currentWaypoint?.y || 0)) < 3.5);
+  // Next waypoint for forward camera look vector
+  const nextWaypoint: PathWaypoint3D = scene.fusedTrajectory[Math.min(scene.fusedTrajectory.length - 1, activeIdx + 2)] || currentWaypoint;
+
+  // Detect closest room based on distance
+  const nearbyRoom = scene.rooms.find(r => {
+    const dx = r.doorPosition[0] - currentWaypoint.x;
+    const dy = r.doorPosition[1] - currentWaypoint.y;
+    return Math.hypot(dx, dy) < 4.0;
+  });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -72,7 +87,6 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
       return;
     }
 
-    // Shaders with interior soft ambient + overhead ceiling lighting
     const vsSource = `
       attribute vec3 aPosition;
       attribute vec3 aNormal;
@@ -88,11 +102,10 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
       void main() {
         gl_Position = uProjection * uView * vec4(aPosition, 1.0);
 
-        // Soft interior directional light from ceiling + warm bounce
         vec3 norm = normalize(aNormal);
         float diffuse = max(dot(norm, uLightDirection), 0.0);
-        float ambient = 0.58; // High ambient illumination typical of lit indoor corridors
-        vLight = ambient + diffuse * 0.42;
+        float ambient = 0.60; // Bright, clean interior lighting
+        vLight = ambient + diffuse * 0.40;
         vColor = aColor;
       }
     `;
@@ -131,8 +144,8 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
     gl.enable(gl.DEPTH_TEST);
     gl.depthFunc(gl.LEQUAL);
 
-    // Overhead ceiling light vector (downward from Z+)
-    gl.uniform3f(uLightLoc, 0.15, 0.25, 0.95);
+    // Ceiling light vector
+    gl.uniform3f(uLightLoc, 0.1, 0.2, 0.96);
 
     const createMeshBuffers = (mesh: Mesh3DGeometry) => {
       const posBuf = gl.createBuffer();
@@ -164,6 +177,8 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
     const wallsBuffers = createMeshBuffers(scene.indoorWallsMesh);
     const ceilingBuffers = createMeshBuffers(scene.indoorCeilingMesh);
     const doorsBuffers = createMeshBuffers(scene.indoorDoorsMesh);
+    const glassBuffers = createMeshBuffers(scene.indoorGlassWindowsMesh);
+    const columnsBuffers = createMeshBuffers(scene.indoorColumnsMesh);
     const pathBuffers = createMeshBuffers(scene.pathMesh);
 
     const drawMesh = (buffers: any) => {
@@ -187,65 +202,85 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
 
     const render = () => {
       gl.viewport(0, 0, canvas.width, canvas.height);
-      gl.clearColor(0.08, 0.11, 0.16, 1.0); // Modern neutral interior background
+      gl.clearColor(0.07, 0.09, 0.14, 1.0);
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
       const aspect = canvas.width / canvas.height;
       const projMat = Mat4.create();
-      Mat4.perspective(projMat, (60 * Math.PI) / 180, aspect, 0.2, 200.0);
+      Mat4.perspective(projMat, (62 * Math.PI) / 180, aspect, 0.2, 250.0);
       gl.uniformMatrix4fv(uProjLoc, false, projMat);
 
       const viewMat = Mat4.create();
 
       if (cameraMode === 'first_person' && currentWaypoint) {
-        // First Person: Camera placed inside corridor at eye height (1.65m), looking down the hallway
+        // Camera positioned at eye level
         const eyeX = currentWaypoint.x;
         const eyeY = currentWaypoint.y;
-        const eyeZ = 1.65;
+        const eyeZ = currentWaypoint.z || (scene.floorElevationZ + 1.65);
 
-        // Look 6 meters ahead along the corridor
-        const targetX = eyeX;
-        const targetY = eyeY + 6.0;
-        const targetZ = 1.65;
+        // Forward look vector follows the path curve
+        const dx = nextWaypoint.x - eyeX;
+        const dy = nextWaypoint.y - eyeY;
+        const len = Math.hypot(dx, dy) || 1;
+        const forwardDist = 5.5;
+
+        let targetX = eyeX + (dx / len) * forwardDist;
+        let targetY = eyeY + (dy / len) * forwardDist;
+        let targetZ = eyeZ;
+
+        // If at the very end of the path, look forward along current heading
+        if (Math.hypot(dx, dy) < 0.2) {
+          const rad = (currentWaypoint.headingDeg * Math.PI) / 180;
+          targetX = eyeX + Math.sin(rad) * forwardDist;
+          targetY = eyeY + Math.cos(rad) * forwardDist;
+        }
 
         Mat4.lookAt(viewMat, [eyeX, eyeY, eyeZ], [targetX, targetY, targetZ], [0, 0, 1]);
       } else {
-        // Dollhouse / Cutaway Isometric View from above
+        // Dollhouse Isometric Cutaway from above
         const radYaw = (yaw * Math.PI) / 180;
         const radPitch = (pitch * Math.PI) / 180;
 
-        const eyeX = distance * Math.cos(radPitch) * Math.sin(radYaw);
-        const eyeY = (currentWaypoint ? currentWaypoint.y : panY) - distance * Math.cos(radPitch) * Math.cos(radYaw);
-        const eyeZ = distance * Math.sin(radPitch);
+        const targetX = currentWaypoint ? currentWaypoint.x : 0;
+        const targetY = currentWaypoint ? currentWaypoint.y : 15;
+        const targetZ = scene.floorElevationZ + 1.6;
 
-        const targetY = currentWaypoint ? currentWaypoint.y : panY;
-        Mat4.lookAt(viewMat, [eyeX, eyeY, eyeZ], [0, targetY, 1.6], [0, 0, 1]);
+        const eyeX = targetX + distance * Math.cos(radPitch) * Math.sin(radYaw);
+        const eyeY = targetY - distance * Math.cos(radPitch) * Math.cos(radYaw);
+        const eyeZ = targetZ + distance * Math.sin(radPitch);
+
+        Mat4.lookAt(viewMat, [eyeX, eyeY, eyeZ], [targetX, targetY, targetZ], [0, 0, 1]);
       }
 
       gl.uniformMatrix4fv(uViewLoc, false, viewMat);
 
-      // 1. Draw Indoor Polished Floor
+      // 1. Draw Path-Extruded Floor
       drawMesh(floorBuffers);
 
-      // 2. Draw Corridor Drywall Interior Walls & Baseboards
+      // 2. Draw Turning Corridor Walls & Baseboards
       drawMesh(wallsBuffers);
 
-      // 3. Draw Wooden Doors, Aluminum Frames, and Room Placards
+      // 3. Draw Glass Studio Window Panels
+      drawMesh(glassBuffers);
+
+      // 4. Draw Structural Concrete Columns
+      drawMesh(columnsBuffers);
+
+      // 5. Draw Doors & Room Placards
       drawMesh(doorsBuffers);
 
-      // 4. Draw Indoor Guidance Path Ribbon on Floor
+      // 6. Draw Floor Guidance Ribbon
       drawMesh(pathBuffers);
 
-      // 5. Draw Ceiling Grid if enabled or in 1st-person POV
+      // 7. Draw Ceiling if enabled or in 1st-person POV
       if (showCeiling || cameraMode === 'first_person') {
         drawMesh(ceilingBuffers);
       }
     };
 
     render();
-  }, [scene, currentTimeSec, cameraMode, showCeiling, yaw, pitch, distance, panY]);
+  }, [scene, currentTimeSec, cameraMode, showCeiling, yaw, pitch, distance, currentWaypoint, nextWaypoint]);
 
-  // Dollhouse mouse controls
   const handleMouseDown = (e: React.MouseEvent) => {
     if (cameraMode === 'first_person') return;
     isDraggingRef.current = true;
@@ -269,7 +304,7 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
   const handleWheel = (e: React.WheelEvent) => {
     if (cameraMode === 'first_person') return;
     e.preventDefault();
-    setDistance(d => Math.min(60, Math.max(8, d + e.deltaY * 0.05)));
+    setDistance(d => Math.min(70, Math.max(8, d + e.deltaY * 0.05)));
   };
 
   return (
@@ -287,16 +322,28 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
         className="w-full h-[360px] sm:h-[440px] block cursor-grab active:cursor-grabbing"
       />
 
-      {/* Top Left: UCSD Indoor Status Pill */}
-      <div className="absolute top-3 left-3 bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl px-3 py-1.5 shadow-xl flex items-center space-x-2">
-        <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-        <span className="text-xs font-bold text-white">{scene.buildingName}</span>
-        <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-bold border border-amber-500/20">
-          Indoor {scene.corridorName}
+      {/* Top Left: Floor Level Selector */}
+      <div className="absolute top-3 left-3 flex items-center space-x-1.5 bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-1 shadow-xl">
+        <span className="text-[11px] font-bold text-slate-400 px-2 flex items-center space-x-1">
+          <Building className="w-3.5 h-3.5 text-sky-400" />
+          <span>Floor:</span>
         </span>
+        {[1, 2, 3, 4].map(lvl => (
+          <button
+            key={lvl}
+            onClick={() => onSelectLevel && onSelectLevel(lvl)}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
+              scene.floorLevel === lvl
+                ? 'bg-sky-500 text-white shadow'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            L{lvl}
+          </button>
+        ))}
       </div>
 
-      {/* Top Right: View Controls */}
+      {/* Top Right: View Modes */}
       <div className="absolute top-3 right-3 flex items-center space-x-1.5 bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl p-1 shadow-xl">
         <button
           onClick={() => setCameraMode(m => m === 'first_person' ? 'dollhouse' : 'first_person')}
@@ -308,7 +355,7 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
           title="Toggle First-Person Eye-Level Walkthrough"
         >
           <Eye className="w-3.5 h-3.5" />
-          <span>{cameraMode === 'first_person' ? '1st-Person Walkthrough' : 'Dollhouse Cutaway'}</span>
+          <span>{cameraMode === 'first_person' ? '1st-Person POV' : 'Dollhouse Cutaway'}</span>
         </button>
 
         {cameraMode === 'dollhouse' && (
@@ -319,15 +366,15 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            <span>{showCeiling ? 'Ceiling On' : 'Cutaway (No Ceiling)'}</span>
+            <span>{showCeiling ? 'Ceiling On' : 'Cutaway'}</span>
           </button>
         )}
 
         <button
           onClick={() => {
-            setYaw(0);
+            setYaw(30);
             setPitch(48);
-            setDistance(24);
+            setDistance(26);
           }}
           className="p-1 rounded text-slate-400 hover:text-white"
           title="Reset Camera"
@@ -338,7 +385,7 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
 
       {/* Active Door / Room Proximity Alert HUD */}
       {nearbyRoom && (
-        <div className="absolute top-14 left-3 bg-sky-950/90 backdrop-blur border border-sky-500/50 rounded-xl px-3.5 py-2 text-xs text-white shadow-xl flex items-center space-x-2 animate-fade-in pointer-events-none">
+        <div className="absolute top-14 left-3 bg-sky-950/95 backdrop-blur border border-sky-500/50 rounded-xl px-3.5 py-2 text-xs text-white shadow-xl flex items-center space-x-2 animate-fade-in pointer-events-none">
           <DoorOpen className="w-4 h-4 text-sky-400 shrink-0" />
           <div>
             <span className="font-bold text-sky-300 block">Passing Room {nearbyRoom.roomNumber}</span>
@@ -351,16 +398,19 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
       <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
         <div className="bg-slate-900/90 backdrop-blur border border-slate-800 rounded-xl px-3.5 py-2 text-xs flex items-center space-x-3 pointer-events-auto shadow-lg">
           <div className="flex items-center space-x-1.5 text-sky-400">
-            <MapPin className="w-4 h-4" />
+            <Compass className="w-4 h-4" />
             <span className="font-mono font-bold text-white">
-              Hallway Progress: {currentWaypoint ? `${currentWaypoint.y.toFixed(1)}m` : '0m'}
+              Heading: {currentWaypoint ? `${currentWaypoint.headingDeg}°` : '0°'}
             </span>
           </div>
 
           <div className="h-3 w-px bg-slate-800" />
 
           <div className="text-slate-400 text-xs">
-            Eye Level: <span className="text-slate-200 font-mono">1.65m</span>
+            Path Position:{' '}
+            <span className="font-mono text-slate-200">
+              X:{currentWaypoint.x.toFixed(1)}m Y:{currentWaypoint.y.toFixed(1)}m
+            </span>
           </div>
 
           <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold">
@@ -369,7 +419,7 @@ export const WebGL3DViewer: React.FC<WebGL3DViewerProps> = ({
         </div>
 
         <div className="bg-slate-900/85 backdrop-blur border border-slate-800 rounded-xl px-3 py-1.5 text-[11px] text-slate-400 shadow">
-          {cameraMode === 'first_person' ? 'Inside Corridor (Walking with Video)' : 'Drag to Orbit · Scroll to Zoom'}
+          {cameraMode === 'first_person' ? 'Following Turns & Bends' : 'Drag to Orbit · Scroll to Zoom'}
         </div>
       </div>
     </div>

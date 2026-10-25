@@ -47,6 +47,7 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
 
   // Selected UCSD building (default Design and Innovation Building - DIB)
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>('b-dib');
+  const [currentLevel, setCurrentLevel] = useState<number>(2);
 
   // Conversion, Analysis & 3D Synthesis state
   const [conversionProgress, setConversionProgress] = useState<ConversionProgress | null>(null);
@@ -104,14 +105,16 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
 
   const runVideoAnalysis = async (url: string, bldgId: string) => {
     try {
-      const result = await VideoPathAnalyzer.analyzeVideoPath(url, 32.8811, -117.2376, progress => {
+      const result = await VideoPathAnalyzer.analyzeVideoPath(url, 32.8784, -117.2359, progress => {
         setAnalysisProgress(progress);
       });
       setAnalysisResult(result);
 
       // Synthesize 3D Indoor Corridor Scene via Gemma + UCSD Schematics
       setIsSynthesizing3D(true);
-      const scene3D = await Gemma3DModeler.synthesize3DScene(result.trajectory, bldgId);
+      const levelToUse = result.detectedFloorLevel || currentLevel;
+      setCurrentLevel(levelToUse);
+      const scene3D = await Gemma3DModeler.synthesize3DScene(result.trajectory, bldgId, levelToUse);
       setGemmaScene(scene3D);
       setIsSynthesizing3D(false);
     } catch (err: any) {
@@ -121,11 +124,21 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
     }
   };
 
+  const handleLevelChange = async (level: number) => {
+    setCurrentLevel(level);
+    if (analysisResult) {
+      setIsSynthesizing3D(true);
+      const scene3D = await Gemma3DModeler.synthesize3DScene(analysisResult.trajectory, selectedBuildingId, level);
+      setGemmaScene(scene3D);
+      setIsSynthesizing3D(false);
+    }
+  };
+
   const handleBuildingChange = async (newBldgId: string) => {
     setSelectedBuildingId(newBldgId);
     if (analysisResult) {
       setIsSynthesizing3D(true);
-      const scene3D = await Gemma3DModeler.synthesize3DScene(analysisResult.trajectory, newBldgId);
+      const scene3D = await Gemma3DModeler.synthesize3DScene(analysisResult.trajectory, newBldgId, currentLevel);
       setGemmaScene(scene3D);
       setIsSynthesizing3D(false);
     }
@@ -374,6 +387,7 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
               currentTimeSec={currentTime}
               durationSec={duration}
               onSeek={handleSeek}
+              onSelectLevel={handleLevelChange}
             />
           </div>
 
