@@ -355,8 +355,15 @@ export const repo = {
     });
 
     syncWorker.refreshPendingCount();
-    if (navigator.onLine) syncWorker.triggerSync();
     return route;
+  },
+
+  async clearRoutes(): Promise<void> {
+    await db.routes.clear();
+  },
+
+  async deleteRoute(id: string): Promise<void> {
+    await db.routes.delete(id);
   },
 
   // --------------------------------------------------------------------------

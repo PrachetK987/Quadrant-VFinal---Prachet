@@ -1,46 +1,4 @@
 {
   "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "route-lib-sci",
-        "name": "Library to Science Hall (Accessible Main Pathway)",
-        "campus_id": "c-berkeley-central",
-        "distance_meters": 240,
-        "accessible": true,
-        "surface": "smooth concrete",
-        "incline_pct": 2.1
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [-122.2595, 37.8724],
-          [-122.2588, 37.8726],
-          [-122.2581, 37.8729],
-          [-122.2572, 37.8732]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "id": "route-union-lib",
-        "name": "Student Union to Library Quad Walk",
-        "campus_id": "c-berkeley-central",
-        "distance_meters": 310,
-        "accessible": true,
-        "surface": "paved brick",
-        "incline_pct": 1.5
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [-122.2590, 37.8698],
-          [-122.2592, 37.8710],
-          [-122.2595, 37.8724]
-        ]
-      }
-    }
-  ]
+  "features": []
 }
