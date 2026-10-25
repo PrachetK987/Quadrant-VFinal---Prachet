@@ -61,7 +61,7 @@ export class Gemma3DModeler {
    */
   public static async synthesize3DScene(
     rawTrajectory: PathWaypoint3D[],
-    targetBuildingId: string = 'b-geisel'
+    targetBuildingId: string = 'b-dib'
   ): Promise<Campus3DScene> {
     const ucsdBuilding = UCSD_CAMPUS_BUILDINGS.find(b => b.id === targetBuildingId)
       || UCSD_CAMPUS_BUILDINGS[0];

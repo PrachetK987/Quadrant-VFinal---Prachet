@@ -1,266 +1,139 @@
 {
   "campus": {
-    "id": "c-berkeley-central",
-    "name": "Central Campus",
-    "center_lat": 37.8719,
-    "center_lng": -122.2585,
-    "current_pack_version": "v1.2.0"
+    "id": "c-ucsd-main",
+    "name": "UC San Diego (UCSD)",
+    "center_lat": 32.8784,
+    "center_lng": -117.2359,
+    "current_pack_version": "v1.3.0"
   },
   "buildings": [
     {
-      "id": "b-library",
-      "campus_id": "c-berkeley-central",
-      "name": "Main Memorial Library",
-      "lat": 37.8724,
-      "lng": -122.2595,
-      "hours": "7:30 AM - Midnight",
+      "id": "b-dib",
+      "campus_id": "c-ucsd-main",
+      "name": "Design and Innovation Building (DIB)",
+      "lat": 32.8784,
+      "lng": -117.2359,
+      "hours": "7:00 AM - 11:00 PM",
       "floors_count": 4,
-      "tags": ["Study", "Silent", "Computers", "Printers", "Late Night"],
-      "amenities": ["outlets", "wifi", "quiet", "printer", "restrooms", "accessible_entrance"],
-      "accessibility_notes": "Ramped western entrance, automatic doors, dual elevators to all levels.",
+      "tags": ["Design Lab", "Makerspace", "3D Printing", "Outlets", "The Basement"],
+      "amenities": ["outlets", "wifi", "printer", "quiet", "food", "accessible_entrance"],
+      "accessibility_notes": "Zero-step terrace access directly from Pepper Canyon Amphitheater and trolley station.",
       "navigability": 5,
-      "updated_at": "2026-10-25T12:00:00Z",
+      "updated_at": "2026-10-25T16:00:00Z",
       "floors": [
         {
-          "id": "f-lib-1",
-          "building_id": "b-library",
-          "level": 1,
+          "id": "f-dib-2",
+          "building_id": "b-dib",
+          "level": 2,
           "floorplan_svg_path": "/packs/campus-pack-v1/floorplans/library-fl1.svg",
-          "highlights": ["Circulation Desk", "Collaborative Commons", "Tech Hub", "Auditorium"]
+          "highlights": ["Design Studio 202", "Makerspace Laser Bay", "Don Norman Design Lab 214", "Terrace"]
         },
         {
-          "id": "f-lib-2",
-          "building_id": "b-library",
-          "level": 2,
+          "id": "f-dib-1",
+          "building_id": "b-dib",
+          "level": 1,
           "floorplan_svg_path": "/packs/campus-pack-v1/floorplans/library-fl2.svg",
-          "highlights": ["Room 214 (Quiet Study)", "Individual Carrels", "Graduate Reading Room"]
+          "highlights": ["EnVision Prototyping Hub", "Showcase Gallery", "Cafe Lounge"]
         }
       ],
       "rooms": [
         {
-          "id": "r-lib-101",
-          "floor_id": "f-lib-1",
-          "room_number": "101",
-          "name": "Circulation Desk",
-          "type": "service",
+          "id": "r-dib-202",
+          "floor_id": "f-dib-2",
+          "room_number": "202",
+          "name": "Design Studio & Prototyping",
+          "type": "lab",
           "svg_element_id": "room-101"
         },
         {
-          "id": "r-lib-102",
-          "floor_id": "f-lib-1",
-          "room_number": "102",
-          "name": "Study Commons",
-          "type": "study",
+          "id": "r-dib-208",
+          "floor_id": "f-dib-2",
+          "room_number": "208",
+          "name": "Makerspace Laser & 3D Bay",
+          "type": "lab",
           "svg_element_id": "room-102"
         },
         {
-          "id": "r-lib-105",
-          "floor_id": "f-lib-1",
-          "room_number": "105",
-          "name": "Print & Tech Hub",
-          "type": "tech",
-          "svg_element_id": "room-105"
-        },
-        {
-          "id": "r-lib-120",
-          "floor_id": "f-lib-1",
-          "room_number": "120",
-          "name": "Auditorium Hall",
-          "type": "lecture",
-          "svg_element_id": "room-120"
-        },
-        {
-          "id": "r-lib-210",
-          "floor_id": "f-lib-2",
-          "room_number": "210",
-          "name": "Focus Carrels",
-          "type": "study",
-          "svg_element_id": "room-210"
-        },
-        {
-          "id": "r-lib-214",
-          "floor_id": "f-lib-2",
+          "id": "r-dib-214",
+          "floor_id": "f-dib-2",
           "room_number": "214",
-          "name": "High-Power Quiet Hall",
+          "name": "Don Norman Design Lab",
           "type": "study",
           "svg_element_id": "room-214"
-        },
-        {
-          "id": "r-lib-220",
-          "floor_id": "f-lib-2",
-          "room_number": "220",
-          "name": "Graduate Reading Room",
-          "type": "study",
-          "svg_element_id": "room-220"
         }
       ]
     },
     {
-      "id": "b-science",
-      "campus_id": "c-berkeley-central",
-      "name": "Science & Innovation Hall",
-      "lat": 37.8732,
-      "lng": -122.2572,
-      "hours": "8:00 AM - 10:00 PM",
-      "floors_count": 3,
-      "tags": ["STEM", "Labs", "Robotics", "3D Printing", "Tutoring"],
-      "amenities": ["outlets", "wifi", "microwave", "restrooms", "accessible_entrance"],
-      "accessibility_notes": "Ground-level zero step entry from courtyard, elevator adjacent to Room S110.",
-      "navigability": 4,
-      "updated_at": "2026-10-25T12:00:00Z",
-      "floors": [
-        {
-          "id": "f-sci-1",
-          "building_id": "b-science",
-          "level": 1,
-          "floorplan_svg_path": "/packs/campus-pack-v1/floorplans/science-fl1.svg",
-          "highlights": ["Robotics Lab", "Physics Hall", "Linux Lab", "Advising"]
-        }
-      ],
-      "rooms": [
-        {
-          "id": "r-sci-101",
-          "floor_id": "f-sci-1",
-          "room_number": "S101",
-          "name": "Robotics Lab",
-          "type": "lab",
-          "svg_element_id": "room-s101"
-        },
-        {
-          "id": "r-sci-105",
-          "floor_id": "f-sci-1",
-          "room_number": "S105",
-          "name": "Physics Hall A",
-          "type": "lecture",
-          "svg_element_id": "room-s105"
-        },
-        {
-          "id": "r-sci-110",
-          "floor_id": "f-sci-1",
-          "room_number": "S110",
-          "name": "Linux Lab",
-          "type": "lab",
-          "svg_element_id": "room-s110"
-        },
-        {
-          "id": "r-sci-115",
-          "floor_id": "f-sci-1",
-          "room_number": "S115",
-          "name": "Advising Center",
-          "type": "service",
-          "svg_element_id": "room-s115"
-        }
-      ]
-    },
-    {
-      "id": "b-union",
-      "campus_id": "c-berkeley-central",
-      "name": "Student Union & Commons",
-      "lat": 37.8698,
-      "lng": -122.2590,
-      "hours": "7:00 AM - 11:00 PM",
-      "floors_count": 2,
-      "tags": ["Food", "Social", "Lounge", "Lockers", "ATM", "Coffee"],
-      "amenities": ["food", "microwave", "outlets", "wifi", "restrooms", "accessible_entrance"],
-      "accessibility_notes": "Full ramp access from plaza, power push buttons on both entrances.",
+      "id": "b-geisel",
+      "campus_id": "c-ucsd-main",
+      "name": "Geisel Library (UCSD)",
+      "lat": 32.8811,
+      "lng": -117.2376,
+      "hours": "7:30 AM - Midnight",
+      "floors_count": 8,
+      "tags": ["Library", "Silent Study", "Computers", "Outlets"],
+      "amenities": ["outlets", "wifi", "quiet", "printer", "restrooms", "accessible_entrance"],
+      "accessibility_notes": "Ramped entrance from library walk, dual elevators to all tower floors.",
       "navigability": 5,
-      "updated_at": "2026-10-25T12:00:00Z",
+      "updated_at": "2026-10-25T16:00:00Z",
       "floors": [
         {
-          "id": "f-union-1",
-          "building_id": "b-union",
-          "level": 1,
-          "floorplan_svg_path": "/packs/campus-pack-v1/floorplans/student-union-fl1.svg",
-          "highlights": ["Food Court", "Lounge", "Commuter Lockers", "Campus Store"]
+          "id": "f-geisel-2",
+          "building_id": "b-geisel",
+          "level": 2,
+          "floorplan_svg_path": "/packs/campus-pack-v1/floorplans/library-fl2.svg",
+          "highlights": ["Digital Media Lab", "Commons", "Room 214 Silent Study"]
         }
       ],
       "rooms": [
         {
-          "id": "r-u-101",
-          "floor_id": "f-union-1",
-          "room_number": "U101",
-          "name": "Food Court",
-          "type": "dining",
-          "svg_element_id": "room-u101"
-        },
-        {
-          "id": "r-u-102",
-          "floor_id": "f-union-1",
-          "room_number": "U102",
-          "name": "Student Lounge",
-          "type": "lounge",
-          "svg_element_id": "room-u102"
-        },
-        {
-          "id": "r-u-103",
-          "floor_id": "f-union-1",
-          "room_number": "U103",
-          "name": "Commuter Lockers",
-          "type": "service",
-          "svg_element_id": "room-u103"
-        },
-        {
-          "id": "r-u-104",
-          "floor_id": "f-union-1",
-          "room_number": "U104",
-          "name": "Campus Store",
-          "type": "retail",
-          "svg_element_id": "room-u104"
+          "id": "r-g214",
+          "floor_id": "f-geisel-2",
+          "room_number": "214",
+          "name": "Silent Study Outlets Hall",
+          "type": "study",
+          "svg_element_id": "room-214"
         }
       ]
+    },
+    {
+      "id": "b-price-center",
+      "campus_id": "c-ucsd-main",
+      "name": "Price Center (UCSD)",
+      "lat": 32.8797,
+      "lng": -117.2361,
+      "hours": "7:00 AM - 11:00 PM",
+      "floors_count": 3,
+      "tags": ["Food", "Social", "Microwaves", "Lockers"],
+      "amenities": ["food", "microwave", "outlets", "wifi", "restrooms", "accessible_entrance"],
+      "accessibility_notes": "Ground zero-step access from Price Center plaza.",
+      "navigability": 5,
+      "updated_at": "2026-10-25T16:00:00Z",
+      "floors": [],
+      "rooms": []
     }
   ],
   "initial_reviews": [
     {
-      "id": "rev-1",
-      "building_id": "b-library",
+      "id": "rev-dib-1",
+      "building_id": "b-dib",
       "user_id": "user-demo-1",
-      "user_name": "Maya Lin (Class of '27)",
+      "user_name": "UCSD Designer",
       "stars": 5,
       "navigability": 5,
-      "text": "Floor 2 Room 214 is the ultimate finals week secret. Silent as a tomb, tons of desk outlets, and climate control is dialed in.",
-      "tags": ["Quiet", "Outlets", "AC"],
-      "updated_at": "2026-10-25T10:30:00Z"
-    },
-    {
-      "id": "rev-2",
-      "building_id": "b-science",
-      "user_id": "user-demo-2",
-      "user_name": "Alex Rivera (Grad)",
-      "stars": 4,
-      "navigability": 4,
-      "text": "Linux Lab S110 has blazing fast gigabit ethernet and dual screen workstations. Can get warm around 3 PM.",
-      "tags": ["Monitors", "Fast Wi-Fi"],
-      "updated_at": "2026-10-25T11:15:00Z"
-    },
-    {
-      "id": "rev-3",
-      "building_id": "b-union",
-      "user_id": "user-demo-3",
-      "user_name": "Sam Patel (Senior)",
-      "stars": 4,
-      "navigability": 5,
-      "text": "Three commercial microwaves right next to Room U101. Line moves quickly even during peak lunch rush at 12:30.",
-      "tags": ["Microwaves", "Food"],
-      "updated_at": "2026-10-25T11:45:00Z"
+      "text": "The Design and Innovation Building has world-class laser cutters, 3D printers, and quiet study alcoves overlooking Pepper Canyon.",
+      "tags": ["Makerspace", "Design Lab", "Fast Wi-Fi"],
+      "updated_at": "2026-10-25T15:00:00Z"
     }
   ],
   "initial_tips": [
     {
-      "id": "tip-1",
-      "building_id": "b-library",
+      "id": "tip-dib-1",
+      "building_id": "b-dib",
       "user_id": "user-demo-1",
-      "user_name": "Maya Lin",
-      "text": "The corner booths in 102 have hidden power strips underneath the table lip.",
-      "updated_at": "2026-10-25T10:35:00Z"
-    },
-    {
-      "id": "tip-2",
-      "building_id": "b-union",
-      "user_id": "user-demo-3",
-      "user_name": "Sam Patel",
-      "text": "Free hot water tap is located behind the coffee bar in the food court.",
-      "updated_at": "2026-10-25T11:50:00Z"
+      "user_name": "UCSD Designer",
+      "text": "Level 2 terrace connects directly to the Central Campus trolley bridge.",
+      "updated_at": "2026-10-25T15:00:00Z"
     }
   ]
 }

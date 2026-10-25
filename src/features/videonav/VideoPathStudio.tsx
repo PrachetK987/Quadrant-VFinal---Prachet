@@ -45,8 +45,8 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [mp4Url, setMp4Url] = useState<string | null>(null);
 
-  // Selected UCSD building (default Geisel Library or Price Center)
-  const [selectedBuildingId, setSelectedBuildingId] = useState<string>('b-geisel');
+  // Selected UCSD building (default Design and Innovation Building - DIB)
+  const [selectedBuildingId, setSelectedBuildingId] = useState<string>('b-dib');
 
   // Conversion, Analysis & 3D Synthesis state
   const [conversionProgress, setConversionProgress] = useState<ConversionProgress | null>(null);
@@ -62,7 +62,7 @@ export const VideoPathStudio: React.FC<VideoPathStudioProps> = ({ onRouteSaved }
   const [duration, setDuration] = useState(0);
 
   // Save to routes state
-  const [routeName, setRouteName] = useState('UCSD Indoor Corridor Path');
+  const [routeName, setRouteName] = useState('UCSD DIB Indoor Walkway Path');
   const [isSaved, setIsSaved] = useState(false);
 
   // Handle video upload
